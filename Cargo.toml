@@ -1,0 +1,23 @@
+[package]
+name = "my_library"
+version = "0.1.5"
+edition = "2024"
+description = "A high performance async cron scheduler"
+license = "Apache-2.0"
+repository = "https://github.com/listellodavide/cron-task-scheduler"
+readme = "README.md"
+keywords = ["async", "scheduler", "tokio"]
+categories = ["asynchronous", "concurrency"]
+
+[dependencies]
+tokio = { version = "1", features = ["full", "tracing"] }
+cron = "0.12"
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+futures = "0.3"
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
