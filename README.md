@@ -1,4 +1,4 @@
-# My Library
+# Cron Task Scheduler Library 'cronscheduler'
 
 A high performance async cron scheduler for Rust.
 
