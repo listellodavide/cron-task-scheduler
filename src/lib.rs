@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```
-//! use my_library::{SchedulerActor, WorkerActor, HttpTask, SimpleLoggingTask, ExecutionPolicy};
+//! use cronscheduler::{SchedulerActor, WorkerActor, HttpTask, SimpleLoggingTask, ExecutionPolicy};
 //! use std::sync::Arc;
 //! use tokio::sync::mpsc;
 //! use reqwest::Client;

@@ -15,7 +15,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cronscheduler = "0.1.5"
+cronscheduler = "0.1.6"
 ```
 
 ## Quick Start
