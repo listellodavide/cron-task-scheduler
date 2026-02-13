@@ -1,4 +1,4 @@
-use my_library::{ExecutionPolicy, HttpTask, SchedulerActor, SimpleLoggingTask, WorkerActor};
+use cronscheduler::{ExecutionPolicy, SchedulerActor, SimpleLoggingTask, WorkerActor};
 use reqwest::Client;
 use std::sync::Arc;
 use tokio::sync::mpsc;

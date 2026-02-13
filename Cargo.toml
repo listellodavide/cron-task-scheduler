@@ -1,8 +1,8 @@
 [package]
-name = "my_library"
+name = "cronscheduler"
 version = "0.1.5"
 edition = "2024"
-description = "A high performance async cron scheduler"
+description = "A high performance async cron task scheduler"
 license = "Apache-2.0"
 repository = "https://github.com/listellodavide/cron-task-scheduler"
 readme = "README.md"
@@ -21,3 +21,7 @@ serde_json = "1.0"
 uuid = { version = "1", features = ["v4"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+

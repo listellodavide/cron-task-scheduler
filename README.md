@@ -15,13 +15,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-my_library = "0.1.5"
+cronscheduler = "0.1.5"
 ```
 
 ## Quick Start
 
 ```rust
-use my_library::{SchedulerActor, WorkerActor, SimpleLoggingTask, ExecutionPolicy};
+use cronscheduler::{SchedulerActor, WorkerActor, SimpleLoggingTask, ExecutionPolicy};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 
