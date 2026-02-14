@@ -12,9 +12,18 @@ pub struct TaskContext {
     pub metadata: HashMap<String, String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskType {
+    Async,      // pure async
+    Blocking,   // CPU-heavy or sync task
+}
+
 #[async_trait]
 pub trait ReactiveTask: Send + Sync + Debug {
     fn id(&self) -> &str;
+    fn task_type(&self) -> TaskType {
+        TaskType::Async
+    }
     async fn execute(
         &self,
         context: TaskContext,

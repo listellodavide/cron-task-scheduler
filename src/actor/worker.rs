@@ -1,4 +1,4 @@
-use crate::models::{ExecutionPolicy, ReactiveTask, SchedulingPolicy, TaskContext};
+use crate::models::{ExecutionPolicy, ReactiveTask, SchedulingPolicy, TaskContext, TaskType};
 use chrono::{DateTime, Utc};
 use priority_queue::PriorityQueue;
 use std::collections::HashMap;
@@ -53,12 +53,21 @@ impl WorkerActor {
 
     pub async fn run(mut self) {
         info!("Worker actor started");
-        let mut queue = PriorityQueue::new();
-        // Limit concurrency to avoid spawning too many tasks if they are rate-limited or delayed
-        let semaphore = Arc::new(Semaphore::new(100));
+        let mut async_queue = PriorityQueue::new();
+        let mut blocking_queue = PriorityQueue::new();
+
+        // Limit concurrency
+        let async_semaphore = Arc::new(Semaphore::new(100));
+        // Blocking tasks usually limited by CPU cores
+        let blocking_semaphore = Arc::new(Semaphore::new(num_cpus::get()));
+
+        let mut log_interval = tokio::time::interval(std::time::Duration::from_secs(5));
 
         loop {
             tokio::select! {
+                _ = log_interval.tick() => {
+                     info!("Async tasks queued: {}, Blocking tasks queued: {}", async_queue.len(), blocking_queue.len());
+                }
                 msg = self.receiver.recv() => {
                     match msg {
                         Some(WorkerMessage::Execute {
@@ -69,14 +78,17 @@ impl WorkerActor {
                         }) => {
                             let pending = PendingTask {
                                 id: Uuid::new_v4(),
-                                task,
+                                task: task.clone(),
                                 context,
                                 execution_policy,
                                 scheduling_policy,
                                 arrival_time: Utc::now(),
                             };
                             let priority = self.calculate_priority(&pending);
-                            queue.push(pending, priority);
+                            match task.task_type() {
+                                TaskType::Async => { async_queue.push(pending, priority); }
+                                TaskType::Blocking => { blocking_queue.push(pending, priority); }
+                            }
                         }
                         None => {
                             info!("Worker actor channel closed");
@@ -84,10 +96,18 @@ impl WorkerActor {
                         }
                     }
                 }
-                // Try to acquire a permit to execute a task
-                permit = semaphore.clone().acquire_owned(), if !queue.is_empty() => {
+                // Try to acquire a permit to execute an async task
+                permit = async_semaphore.clone().acquire_owned(), if !async_queue.is_empty() => {
                     if let Ok(permit) = permit {
-                        if let Some((pending, _)) = queue.pop() {
+                        if let Some((pending, _)) = async_queue.pop() {
+                            self.execute_pending_task(pending, permit).await;
+                        }
+                    }
+                }
+                // Try to acquire a permit to execute a blocking task
+                permit = blocking_semaphore.clone().acquire_owned(), if !blocking_queue.is_empty() => {
+                    if let Ok(permit) = permit {
+                        if let Some((pending, _)) = blocking_queue.pop() {
                             self.execute_pending_task(pending, permit).await;
                         }
                     }
@@ -140,6 +160,8 @@ impl WorkerActor {
             .or_insert_with(|| Arc::new(Mutex::new(())))
             .clone();
 
+        let task_type = task.task_type();
+
         // We spawn the execution logic so we don't block the actor loop
         tokio::spawn(async move {
             // permit is held until this task finishes
@@ -150,33 +172,52 @@ impl WorkerActor {
                     if let Ok(guard) = lock.try_lock_owned() {
                         let _guard = guard;
                         info!("Executing task (skip-if-running): {}", task.id());
-                        if let Err(e) = task.execute(context).await {
-                            error!("Task {} failed: {}", task.id(), e);
-                        } else {
-                            info!("Task {} completed successfully", task.id());
-                        }
+                        execute_task_by_type(task, context, task_type).await;
                     } else {
                         warn!("Task {} already running, skipping execution", task.id());
                     }
                 }
                 ExecutionPolicy::Parallel => {
                     info!("Executing task (parallel): {}", task.id());
-                    if let Err(e) = task.execute(context).await {
-                        error!("Task {} failed: {}", task.id(), e);
-                    } else {
-                        info!("Task {} completed successfully", task.id());
-                    }
+                    execute_task_by_type(task, context, task_type).await;
                 }
                 ExecutionPolicy::Sequential => {
                     let _guard = lock.lock_owned().await;
                     info!("Executing task (sequential): {}", task.id());
-                    if let Err(e) = task.execute(context).await {
+                    execute_task_by_type(task, context, task_type).await;
+                }
+            }
+        });
+    }
+}
+
+async fn execute_task_by_type(task: Arc<dyn ReactiveTask>, context: TaskContext, task_type: TaskType) {
+    match task_type {
+        TaskType::Async => {
+            if let Err(e) = task.execute(context).await {
+                error!("Task {} failed: {}", task.id(), e);
+            } else {
+                info!("Task {} completed successfully", task.id());
+            }
+        }
+        TaskType::Blocking => {
+            let task_clone = task.clone();
+            let context_clone = context.clone();
+            let handle = tokio::task::spawn_blocking(move || {
+                futures::executor::block_on(task_clone.execute(context_clone))
+            });
+            match handle.await {
+                Ok(res) => {
+                    if let Err(e) = res {
                         error!("Task {} failed: {}", task.id(), e);
                     } else {
                         info!("Task {} completed successfully", task.id());
                     }
                 }
+                Err(e) => {
+                    error!("Task {} join error: {}", task.id(), e);
+                }
             }
-        });
+        }
     }
 }
