@@ -7,6 +7,7 @@ use std::fmt::Debug;
 pub struct TaskContext {
     pub scheduled_time: DateTime<Utc>,
     pub actual_time: DateTime<Utc>,
+    pub weight: i8, // -20 to +19, default 0. Lower is higher priority (like nice).
     #[allow(dead_code)]
     pub metadata: HashMap<String, String>,
 }
@@ -29,4 +30,13 @@ pub enum ExecutionPolicy {
     /// Queue the execution to run sequentially after the previous one completes
     #[allow(dead_code)]
     Sequential,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SchedulingPolicy {
+    FIFO,
+    PRIORITY,
+    FAIR,
+    DELAYED,
+    RATE_LIMITED,
 }

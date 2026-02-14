@@ -65,7 +65,7 @@ async fn schedule_loop(item: ScheduledTaskItem, worker_tx: mpsc::Sender<WorkerMe
                 tokio::time::sleep(duration).await;
             }
             Err(_) => {
-                // If duration is negative, we are already past scheduled time
+                // If the duration is negative, we are already past the scheduled time
                 debug!(
                     "Task {} scheduled time {:?} is in the past, running immediately",
                     item.task.id(),

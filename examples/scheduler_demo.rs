@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     });
 
     // Run every 5 seconds
-    scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Parallel)?;
+    scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Sequential)?;
 
     // Start scheduling
     scheduler.start_all().await;
