@@ -1,9 +1,15 @@
 [package]
 name = "cron-task-scheduler"
 version = "0.1.7"
-edition = "2024"
+edition = "2021"
 authors = ["Davide Listello <davide.listello@gmail.com>"]
 license = "SSPL-1.0"
+description = "A high-performance async cron scheduler for Rust, supporting both async and blocking tasks with fine-grained scheduling policies."
+repository = "https://github.com/davidelistello/cron-task-scheduler"
+homepage = "https://github.com/davidelistello/cron-task-scheduler"
+documentation = "https://docs.rs/cron-task-scheduler"
+keywords = ["cron", "scheduler", "async", "tokio", "task"]
+categories = ["asynchronous", "concurrency", "date-and-time"]
 
 [dependencies]
 anyhow = "1.0.82"
