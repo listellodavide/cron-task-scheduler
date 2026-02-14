@@ -175,8 +175,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "cron-task-scheduler"
-version = "0.1.7"
+name = "cronscheduler"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "async-trait",

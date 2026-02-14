@@ -61,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Run every 10 seconds
     scheduler.add_task(
         ping_task,
-        "*/30 * * * * *",
+        "*/20 * * * * *",
         ExecutionPolicy::SkipIfRunning,
         SchedulingPolicy::FirstInFirstOut,
         0

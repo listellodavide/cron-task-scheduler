@@ -26,7 +26,7 @@
 //!         command: "ping".to_string(),
 //!         args: vec!["-c".to_string(), "1".to_string(), "8.8.8.8".to_string()],
 //!     });
-//!     scheduler.add_task(ping_task, "*/30 * * * * *", ExecutionPolicy::SkipIfRunning, SchedulingPolicy::FirstInFirstOut, 0)?;
+//!     scheduler.add_task(ping_task, "*/20 * * * * *", ExecutionPolicy::SkipIfRunning, SchedulingPolicy::FirstInFirstOut, 0)?;
 //!
 //!     Ok(())
 //! }
@@ -34,16 +34,16 @@
 
 pub mod actor;
 pub mod cron_parser;
-pub mod http_tasks;
+pub mod default_tasks;
 pub mod models;
 
 pub use actor::scheduler::SchedulerActor;
 pub use actor::worker::WorkerActor;
 pub use cron_parser::CronParser;
-pub use http_tasks::{HttpTask, SimpleLoggingTask, CommandLineTask};
+pub use default_tasks::{HttpTask, SimpleLoggingTask, CommandLineTask};
 pub use models::{ExecutionPolicy, ReactiveTask, TaskContext, SchedulingPolicy, TaskType};
 
-/// A high performance async cron scheduler runner.
+/// A high-performance async cron scheduler runner.
 ///
 /// This is a convenience function to demonstrate library usage.
 pub fn run() {
