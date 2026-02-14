@@ -12,18 +12,18 @@ pub struct HttpTask {
 
 #[async_trait]
 impl ReactiveTask for HttpTask {
+
     fn id(&self) -> &str {
         &self.id
     }
-
     async fn execute(
         &self,
         _context: TaskContext,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Fetching URL: {}", self.url);
-        let res = self.client.get(&self.url).send().await?;
+        let res: reqwest::Response = self.client.get(&self.url).send().await?;
         let status = res.status();
-        let body = res.text().await?;
+        let body: String = res.text().await?;
         info!(
             "Response Status: {}, Body prefix: {}",
             status,

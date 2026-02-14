@@ -1,9 +1,9 @@
-//! A high performance async cron scheduler.
+//! A high-performance async cron scheduler.
 //!
 //! # Example
 //!
 //! ```
-//! use cronscheduler::{SchedulerActor, WorkerActor, HttpTask, SimpleLoggingTask, ExecutionPolicy};
+//! use cronscheduler::{SchedulerActor, WorkerActor, HttpTask, SimpleLoggingTask, ExecutionPolicy, SchedulingPolicy};
 //! use std::sync::Arc;
 //! use tokio::sync::mpsc;
 //! use reqwest::Client;
@@ -16,7 +16,7 @@
 //!
 //!     let mut scheduler = SchedulerActor::new(worker_tx);
 //!     let log_task = Arc::new(SimpleLoggingTask { id: "heartbeat".to_string() });
-//!     scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Parallel)?;
+//!     scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Parallel, SchedulingPolicy::FirstInFirstOut, 0)?;
 //!
 //!     Ok(())
 //! }
@@ -24,14 +24,14 @@
 
 pub mod actor;
 pub mod cron_parser;
-pub mod example_tasks;
+pub mod http_tasks;
 pub mod models;
 
 pub use actor::scheduler::SchedulerActor;
 pub use actor::worker::WorkerActor;
 pub use cron_parser::CronParser;
-pub use example_tasks::{HttpTask, SimpleLoggingTask};
-pub use models::{ExecutionPolicy, ReactiveTask, TaskContext};
+pub use http_tasks::{HttpTask, SimpleLoggingTask};
+pub use models::{ExecutionPolicy, ReactiveTask, TaskContext, SchedulingPolicy};
 
 /// A high performance async cron scheduler runner.
 ///

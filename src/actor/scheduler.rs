@@ -1,6 +1,6 @@
 use crate::actor::worker::WorkerMessage;
 use crate::cron_parser::CronParser;
-use crate::models::{ExecutionPolicy, ReactiveTask, TaskContext};
+use crate::models::{ExecutionPolicy, ReactiveTask, SchedulingPolicy, TaskContext};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,7 +10,9 @@ use tracing::{debug, error, info};
 pub struct ScheduledTaskItem {
     pub task: Arc<dyn ReactiveTask>,
     pub cron_parser: CronParser,
-    pub policy: ExecutionPolicy,
+    pub execution_policy: ExecutionPolicy,
+    pub scheduling_policy: SchedulingPolicy,
+    pub weight: i8,
 }
 
 pub struct SchedulerActor {
@@ -30,13 +32,17 @@ impl SchedulerActor {
         &mut self,
         task: Arc<dyn ReactiveTask>,
         cron_expr: &str,
-        policy: ExecutionPolicy,
+        execution_policy: ExecutionPolicy,
+        scheduling_policy: SchedulingPolicy,
+        weight: i8,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let cron_parser = CronParser::new(cron_expr)?;
         self.tasks.push(ScheduledTaskItem {
             task,
             cron_parser,
-            policy,
+            execution_policy,
+            scheduling_policy,
+            weight,
         });
         Ok(())
     }
@@ -77,6 +83,7 @@ async fn schedule_loop(item: ScheduledTaskItem, worker_tx: mpsc::Sender<WorkerMe
         let context = TaskContext {
             scheduled_time,
             actual_time: Utc::now(),
+            weight: item.weight,
             metadata: {
                 let mut m = HashMap::new();
                 m.insert("task_id".to_string(), item.task.id().to_string());
@@ -88,7 +95,8 @@ async fn schedule_loop(item: ScheduledTaskItem, worker_tx: mpsc::Sender<WorkerMe
             .send(WorkerMessage::Execute {
                 task: item.task.clone(),
                 context,
-                policy: item.policy,
+                execution_policy: item.execution_policy,
+                scheduling_policy: item.scheduling_policy,
             })
             .await
         {

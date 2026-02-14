@@ -1,4 +1,4 @@
-use cronscheduler::{ExecutionPolicy, HttpTask, SchedulerActor, SimpleLoggingTask, WorkerActor};
+use cronscheduler::{ExecutionPolicy, HttpTask, SchedulerActor, SchedulingPolicy, SimpleLoggingTask, WorkerActor};
 use reqwest::Client;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -6,6 +6,12 @@ use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    let logical = num_cpus::get();
+    let physical = num_cpus::get_physical();
+    println!("Logical cores: {logical}, Physical cores: {physical}");
+
+
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -29,14 +35,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     });
 
     // Run every 2 seconds
-    scheduler.add_task(http_task, "*/2 * * * * *", ExecutionPolicy::SkipIfRunning)?;
+    scheduler.add_task(http_task, "*/2 * * * * *", ExecutionPolicy::SkipIfRunning, SchedulingPolicy::FIFO, 0)?;
 
     let log_task = Arc::new(SimpleLoggingTask {
         id: "heartbeat".to_string(),
     });
 
     // Run every 5 seconds
-    scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Sequential)?;
+    scheduler.add_task(log_task, "*/5 * * * * *", ExecutionPolicy::Sequential, SchedulingPolicy::FIFO, 0)?;
 
     // Start scheduling
     scheduler.start_all().await;
