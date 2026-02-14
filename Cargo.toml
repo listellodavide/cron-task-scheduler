@@ -1,6 +1,6 @@
 [package]
 name = "cron-task-scheduler"
-version = "0.1.7"
+version = "0.1.6"
 edition = "2021"
 authors = ["Davide Listello <davide.listello@gmail.com>"]
 license = "SSPL-1.0"
